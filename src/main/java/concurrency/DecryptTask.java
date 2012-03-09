@@ -13,6 +13,8 @@ import java.util.SortedMap;
 
 import javax.swing.SwingWorker;
 
+import persistence.FileStoreDB;
+
 import components.FolderEncrypt;
 
 import encryption.DesEncrypter;
@@ -20,18 +22,18 @@ import encryption.DesEncrypter;
 public class DecryptTask extends
 		SwingWorker<Map<String, Object>, Map<String, Object>> {
 
-	private FolderEncrypt fe;
+	private FolderEncrypt app;
 	private DesEncrypter des;
 
 	public DecryptTask(FolderEncrypt fe) {
-		this.fe = fe;
+		this.app = fe;
 		this.des = new DesEncrypter();
 	}
 
 	@Override
 	protected Map<String, Object> doInBackground() throws Exception {
-		fe.enableButtons(false);
-		decrypt(fe.getSrcDir(), fe.getDestDir());
+		app.enableButtons(false);
+		decrypt(app.getSrcDir(), app.getDestDir());
 		Map<String, Object> hashMap = new HashMap<String, Object>();
 		hashMap.put("done", true);
 		return hashMap;
@@ -47,14 +49,18 @@ public class DecryptTask extends
 			for (int i = 0; i < children.length; i++) {
 				// Get filename of file or directory
 				File src = children[i];
-				SortedMap<Long, String> fileStore = fe.getFileStore();
+				Map<Long, String> fileStore = FileStoreDB.getInstance().getFileStore();
 				String t = src.getName();
 				String filename = fileStore.get(t);
+				
+				if(filename == null) {
+					filename = dest.getAbsolutePath() + File.separator + t;
+				}
 				
 				File destFile = new File(filename);
 				try {
 					des.decrypt(new FileInputStream(src), new FileOutputStream(
-							destFile), fe.getPassword());
+							destFile), app.getPassword());
 					HashMap<String, Object> current = new HashMap<String, Object>();
 					current.put("current", src.getAbsoluteFile());
 					publish(current);
@@ -69,14 +75,14 @@ public class DecryptTask extends
 	@Override
 	protected void process(List<Map<String, Object>> chunks) {
 		for (Map m : chunks) {
-			fe.sendMessage("Decrypted: " + m.get("current"));
+			app.sendMessage("Decrypted: " + m.get("current"));
 		}
 	}
 
 	@Override
 	protected void done() {
-		fe.sendMessage("Decryption finished.");
-		fe.enableButtons(true);
-		fe.clearTextFields();
+		app.sendMessage("Decryption finished.");
+		app.enableButtons(true);
+		app.clearTextFields();
 	}
 }

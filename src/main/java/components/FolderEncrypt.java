@@ -12,10 +12,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
-import java.util.SortedMap;
 
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -26,9 +24,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import net.kotek.jdbm.DB;
-import net.kotek.jdbm.DBMaker;
-
+import persistence.FileStoreDB;
 import concurrency.DecryptTask;
 import concurrency.EncryptTask;
 
@@ -45,12 +41,13 @@ public class FolderEncrypt extends JPanel implements ActionListener {
 	private String password;
 	private JButton decryptButton;
 	private JButton encryptButton;
-	private DB db;
+	private static JFrame frame;
 
 	public FolderEncrypt() {
 		super(new GridBagLayout());
-		getFileStore();
-		
+	}
+
+	private void mainLayout() {
 		fc = new JFileChooser();
 		fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
@@ -89,22 +86,6 @@ public class FolderEncrypt extends JPanel implements ActionListener {
 		c.weighty = 10;
 		c.insets = new Insets(5,5,5,5);
 		add(logScrollPane, c);
-	}
-
-	public SortedMap<Long, String> getFileStore() {
-		db = new DBMaker("fedata").build();
-		SortedMap<Long, String> fileStore = db.getTreeMap("fileStore");
-		if(fileStore == null) {
-			fileStore = db.createTreeMap("fileStore");
-		}
-		db.close();
-		return fileStore;
-	}
-	public void storeEncryptedFile( Long timestamp, String encryptedName) {
-		db = new DBMaker("fedata").build();
-		SortedMap<Long, String> fileStore = db.getTreeMap("fileStore");
-		fileStore.put(timestamp, encryptedName);
-		db.close();
 	}
 
 	private JPanel srcPanelLayout() {
@@ -288,32 +269,34 @@ public class FolderEncrypt extends JPanel implements ActionListener {
 	 * Create the GUI and show it. For thread safety, this method should be
 	 * invoked from the event-dispatching thread.
 	 */
-	private static void createAndShowGUI() {
+	private static void startApplication() {
 		// Make sure we have nice window decorations.
 		JFrame.setDefaultLookAndFeelDecorated(true);
 		JDialog.setDefaultLookAndFeelDecorated(true);
 
-		// Create and set up the window.
-		JFrame frame = new JFrame("FolderEncrypt");
+		frame = new JFrame("FolderEncrypt");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-
 		// Create and set up the content pane.
-		JComponent newContentPane = new FolderEncrypt();
-		newContentPane.setOpaque(true); // content panes must be opaque
-		frame.setContentPane(newContentPane);
+		FolderEncrypt app = new FolderEncrypt();
+		app.mainLayout();
+		app.setOpaque(true); // content panes must be opaque
+		frame.setContentPane(app);
 
 		// Display the window.
 		frame.pack();
 		frame.setVisible(true);
+		
+		FileStoreDB.getInstance().getFileStore();
 	}
 
+	
 	public static void main(String[] args) {
 		// Schedule a job for the event-dispatching thread:
 		// creating and showing this application's GUI.
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				createAndShowGUI();
+				startApplication();
 			}
 		});
 	}
@@ -370,5 +353,7 @@ public class FolderEncrypt extends JPanel implements ActionListener {
 			return false;
 		}
 	}
-	
+	private void dispose() {
+		FileStoreDB.getInstance().closeDB();
+	}
 }
