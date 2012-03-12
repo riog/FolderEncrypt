@@ -48,7 +48,7 @@ protected Map<String, Object> doInBackground() throws Exception {
 		        String name = src.getName();
 				String filename = dest.getAbsolutePath() + File.separator + name;
 				String maskdName = dest.getAbsolutePath() + File.separator + t;
-				FileStoreDB.getInstance().storeEncryptedFile( t, filename);
+				FileStoreDB.getInstance().storeEncryptedFile( t, name);
 				
 				File destFile = new File(maskdName);
 				try {

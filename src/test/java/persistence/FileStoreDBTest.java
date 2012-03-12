@@ -7,7 +7,6 @@ public class FileStoreDBTest {
 		Map<Long, String> fileStore = FileStoreDB.getInstance().getFileStore();
 		for(Long key: fileStore.keySet()) {
 			System.out.println(key + ": " + fileStore.get(key));
-			
 		}
 	}
 }

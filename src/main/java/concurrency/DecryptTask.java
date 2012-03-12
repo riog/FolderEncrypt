@@ -50,11 +50,13 @@ public class DecryptTask extends
 				// Get filename of file or directory
 				File src = children[i];
 				Map<Long, String> fileStore = FileStoreDB.getInstance().getFileStore();
-				String t = src.getName();
+				Long  t = Long.valueOf(src.getName());
 				String filename = fileStore.get(t);
 				
 				if(filename == null) {
 					filename = dest.getAbsolutePath() + File.separator + t;
+				} else {
+					filename = dest.getAbsolutePath() + File.separator + filename;
 				}
 				
 				File destFile = new File(filename);
